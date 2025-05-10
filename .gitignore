@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Model files and large data files
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.weights
+*.zip
+*.tar.gz
+*.pkl
+*.npy
+*.npz
+grid_data/
+*.dylib
+server/lipnet/venv/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+
+# Keep these specific model files
+# !avhubert_base_ls960.pt
+# !avhubert_base_ls960.yaml
+
+# Project specific
+*.yaml
+*.csv
+*.json
+!config.json 

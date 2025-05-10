@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Lipreading Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Lipreading Demo</h1>
+        
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+        </div>
+
+        <div class="controls">
+            <button id="startButton">Start Recording</button>
+            <button id="stopButton" disabled>Stop Recording</button>
+        </div>
+
+        <div class="loading" id="loading">
+            Processing video... Please wait.
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        // Request camera access
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                return stream;
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Error accessing camera. Please make sure you have granted camera permissions.');
+            }
+        }
+
+        // Start recording
+        startButton.addEventListener('click', async () => {
+            const stream = await setupCamera();
+            recordedChunks = [];
+            
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm;codecs=vp9'
+            });
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(recordedChunks, {
+                    type: 'video/webm'
+                });
+                
+                const formData = new FormData();
+                formData.append('video', blob, 'recording.webm');
+
+                loading.style.display = 'block';
+                result.style.display = 'none';
+
+                try {
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        result.innerHTML = `
+                            <h3>Prediction:</h3>
+                            <p>${data.prediction}</p>
+                            <h3>Confidence:</h3>
+                            <p>${(data.confidence * 100).toFixed(2)}%</p>
+                        `;
+                    } else {
+                        result.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                    }
+                } catch (err) {
+                    result.innerHTML = `<p style="color: red;">Error processing video: ${err.message}</p>`;
+                }
+
+                loading.style.display = 'none';
+                result.style.display = 'block';
+            };
+
+            mediaRecorder.start();
+            startButton.disabled = true;
+            stopButton.disabled = false;
+        });
+
+        // Stop recording
+        stopButton.addEventListener('click', () => {
+            mediaRecorder.stop();
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        });
+
+        // Initial setup
+        setupCamera();
+    </script>
+</body>
+</html> 
